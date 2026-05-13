@@ -1,4 +1,4 @@
-# birdsapptracker-
+# birdsapptracker
 html observation tracker for Birds app - progress saves locally in your browser 
 # Birds App Tracker
 An HTML tracker for Birds app observations. Progress is saved locally in your browser.
