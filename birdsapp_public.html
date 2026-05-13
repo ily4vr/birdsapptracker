@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>birdsapp</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cm: #a8c5a0; --cm-light: #e8f5e9; --cm-dark: #4a7c59;
+    --ll: #d4c76a; --ll-light: #fdf9e3; --ll-dark: #8a7d20;
+    --it: #89b4cc; --it-light: #e3f2fd; --it-dark: #2a6080;
+    --ww: #d4956a; --ww-light: #fdf0e3; --ww-dark: #8a4820;
+    --pb: #b49acd; --pb-light: #f3edf9; --pb-dark: #5a3080;
+    --bg: #f7f4ee; --ink: #2a2420; --mid: #8a8070;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Cormorant Garamond', serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+
+  header { padding: 2rem 2rem 1rem; border-bottom: 1px solid #ddd8cc; position: sticky; top: 0; background: var(--bg); z-index: 100; }
+  .header-top { display: flex; align-items: baseline; gap: 1.5rem; flex-wrap: wrap; }
+  h1 { font-size: 1.8rem; font-weight: 300; letter-spacing: 0.15em; font-style: italic; }
+  .total-badge { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--mid); letter-spacing: 0.05em; }
+  .total-badge span { color: var(--ink); font-weight: 700; }
+  .credit { font-family: 'Space Mono', monospace; font-size: 0.6rem; color: var(--mid); letter-spacing: 0.04em; margin-top: 0.3rem; }
+  .credit a { color: var(--mid); text-decoration: none; border-bottom: 1px solid #ccc; }
+  .credit a:hover { color: var(--ink); border-color: var(--ink); }
+  .sanctuary-bars { display: flex; gap: 0.6rem; margin-top: 1rem; flex-wrap: wrap; }
+  .s-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.7rem; border-radius: 2px; cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s; font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 0.05em; }
+  .s-bar:hover { opacity: 0.8; } .s-bar.active { border-color: currentColor; }
+  .s-bar .dot { width: 8px; height: 8px; border-radius: 50%; } .s-bar .label { text-transform: uppercase; } .s-bar .count { font-weight: 700; }
+  .s-bar.cm { background: var(--cm-light); color: var(--cm-dark); } .s-bar.cm .dot { background: var(--cm); }
+  .s-bar.ll { background: var(--ll-light); color: var(--ll-dark); } .s-bar.ll .dot { background: var(--ll); }
+  .s-bar.it { background: var(--it-light); color: var(--it-dark); } .s-bar.it .dot { background: var(--it); }
+  .s-bar.ww { background: var(--ww-light); color: var(--ww-dark); } .s-bar.ww .dot { background: var(--ww); }
+  .s-bar.pb { background: var(--pb-light); color: var(--pb-dark); } .s-bar.pb .dot { background: var(--pb); }
+
+  .controls { padding: 0.8rem 2rem; display: flex; gap: 1rem; align-items: center; border-bottom: 1px solid #ddd8cc; flex-wrap: wrap; }
+  .search-wrap { position: relative; flex: 1; min-width: 160px; max-width: 280px; }
+  .search-wrap input { width: 100%; padding: 0.4rem 0.7rem; font-family: 'Cormorant Garamond', serif; font-size: 1rem; border: 1px solid #ccc; background: white; border-radius: 2px; color: var(--ink); }
+  .filter-btns { display: flex; gap: 0.4rem; }
+  .filter-btn { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.35rem 0.6rem; border: 1px solid #ccc; background: white; cursor: pointer; border-radius: 2px; color: var(--mid); transition: all 0.15s; }
+  .filter-btn.active, .filter-btn:hover { background: var(--ink); color: white; border-color: var(--ink); }
+
+  main { display: grid; grid-template-columns: 1fr 220px; min-height: calc(100vh - 140px); }
+  .bird-list { padding: 1rem 2rem; }
+  .bird-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.5rem; }
+
+  .bird-card { display: flex; align-items: center; gap: 0.8rem; padding: 0.6rem 0.8rem; background: white; border: 1px solid #e8e0d4; border-radius: 3px; transition: all 0.15s; min-height: 44px; }
+  .bird-card:hover { border-color: #bbb; }
+  .bird-card.complete { background: #f9f7f2; }
+
+  .bird-num { font-family: 'Space Mono', monospace; font-size: 0.6rem; color: var(--mid); width: 24px; flex-shrink: 0; text-align: right; }
+
+  .bird-name-wrap { flex: 1; min-width: 0; }
+
+  .bird-name {
+    font-size: 1rem; font-weight: 300; letter-spacing: 0.02em;
+    font-family: 'Cormorant Garamond', serif; color: var(--ink);
+    background: transparent; border: none; outline: none;
+    width: 100%; padding: 0; cursor: default;
+    word-break: break-word; white-space: normal;
+  }
+  .bird-name:focus { cursor: text; border-bottom: 1px dashed var(--mid); }
+  .bird-card.complete .bird-name { color: var(--mid); }
+
+  .bird-sanctuaries { display: flex; gap: 3px; flex-shrink: 0; }
+  .s-pip { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #ddd; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 0.45rem; color: transparent; transition: all 0.12s; flex-shrink: 0; user-select: none; }
+  .s-pip:hover { border-color: #999; transform: scale(1.15); }
+  .s-pip.collected.cm { background: var(--cm); border-color: var(--cm-dark); color: white; }
+  .s-pip.collected.ll { background: var(--ll); border-color: var(--ll-dark); color: white; }
+  .s-pip.collected.it { background: var(--it); border-color: var(--it-dark); color: white; }
+  .s-pip.collected.ww { background: var(--ww); border-color: var(--ww-dark); color: white; }
+  .s-pip.collected.pb { background: var(--pb); border-color: var(--pb-dark); color: white; }
+
+  .sidebar { border-left: 1px solid #ddd8cc; padding: 1.5rem 1.2rem; position: sticky; top: 0; height: fit-content; max-height: 100vh; overflow-y: auto; }
+  .sidebar h2 { font-size: 0.65rem; font-family: 'Space Mono', monospace; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-bottom: 1rem; }
+  .progress-block { margin-bottom: 1.2rem; }
+  .progress-block .p-name { font-size: 0.85rem; font-style: italic; margin-bottom: 0.3rem; }
+  .progress-track { height: 4px; background: #e8e0d4; border-radius: 2px; overflow: hidden; margin-bottom: 0.2rem; }
+  .progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+  .p-nums { font-family: 'Space Mono', monospace; font-size: 0.6rem; color: var(--mid); display: flex; justify-content: space-between; }
+  .p-nums .complete-label { color: #4a7c59; font-weight: 700; }
+  .milestone { margin-top: 1.5rem; padding: 0.8rem; border: 1px solid #e8e0d4; border-radius: 3px; background: white; text-align: center; }
+  .milestone .m-icon { font-size: 1.4rem; margin-bottom: 0.3rem; }
+  .milestone .m-label { font-family: 'Space Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
+  .milestone .m-val { font-size: 1.1rem; font-style: italic; margin: 0.2rem 0; }
+  .milestone.achieved { background: #f0faf2; border-color: var(--cm); }
+  .milestone.achieved .m-label { color: var(--cm-dark); }
+
+  .no-results { grid-column: 1/-1; text-align: center; padding: 3rem; font-style: italic; color: var(--mid); }
+  .pip-tooltip { position: fixed; background: var(--ink); color: white; font-family: 'Space Mono', monospace; font-size: 0.6rem; padding: 0.3rem 0.6rem; border-radius: 2px; pointer-events: none; z-index: 999; opacity: 0; transition: opacity 0.1s; letter-spacing: 0.05em; }
+</style>
+</head>
+<body>
+<div class="pip-tooltip" id="tooltip"></div>
+
+<header>
+  <div class="header-top">
+    <h1>Birds</h1>
+    <div class="total-badge">collection · <span id="total-count">0</span> / 100 birds · <span id="obs-count">0</span> / 500 observations</div>
+  </div>
+  <div class="credit">by <a href="https://x.com/nicedayJules" target="_blank">jules @nicedayJules</a> &amp; <a href="https://x.com/mungimungimungi" target="_blank">mungi @mungimungimungi</a></div>
+  <div class="sanctuary-bars" id="sanctuary-bars"></div>
+</header>
+
+<div class="controls">
+  <div class="search-wrap"><input type="text" id="search" placeholder="search by name…"></div>
+  <div class="filter-btns">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="full">Full Sets</button>
+    <button class="filter-btn" data-filter="multi">Multi</button>
+  </div>
+</div>
+
+<main>
+  <div class="bird-list"><div class="bird-grid" id="bird-grid"></div></div>
+  <aside class="sidebar">
+    <h2>Progress</h2>
+    <div id="progress-blocks"></div>
+    <div id="milestones"></div>
+  </aside>
+</main>
+
+<script>
+const SANCTUARIES = [
+  { code: 'cm', name: "Caroline's Meadow",    short: 'CM' },
+  { code: 'll', name: "The Last Light",        short: 'LL' },
+  { code: 'it', name: "In The Tangle",         short: 'IT' },
+  { code: 'ww', name: "Where Water Meets Sun", short: 'WW' },
+  { code: 'pb', name: "A Place Between",       short: 'PB' },
+];
+
+// [number, name, former name or null]
+// former name shown in parentheses — OpenSea may still display the old name
+// click any bird name to rename it if names change in future
+const BIRDS_RAW = [
+  [1,'John',null],[2,'Parker',null],[3,'Glint',null],[4,'Mac',null],[5,'Momo',null],
+  [6,'Mallow',null],[7,'Yugi',null],[8,'Peachy',null],[9,'Emily',null],[10,'Gibbon',null],
+  [11,'Smudge',null],[12,'Marigold',null],[13,'Louie',null],[14,'Clementine',null],[15,'Kiwi',null],
+  [16,'Buttons',null],[17,'Beck',null],[18,'Max',null],[19,'Ryan',null],[20,'Bumble',null],
+  [21,'Sir Edward Chirpington',null],[22,'Zest',null],[23,'Sugaree',null],[24,'Scottie',null],[25,'Rune',null],
+  [26,'Jericho',null],[27,'Kaj',null],[28,'Shaggy',null],[29,'Songly',null],[30,'Paola',null],
+  [31,'Sagol',null],[32,'Sal',null],[33,'Gringy',null],[34,'Comet',null],[35,'Biscotti',null],
+  [36,'Sherman',null],[37,'Alex',null],[38,'Starfire','Ariella'],[39,'Quillan',null],[40,'Pistachio',null],
+  [41,'Spark',null],[42,'Sprite',null],[43,'Nova','Wisp'],[44,'Ziggy',null],[45,'Dandelion',null],
+  [46,'Babydoll',null],[47,'Barb Dwyer',null],[48,'Rose',null],[49,'Abigal',null],[50,'Diablo',null],
+  [51,'Lumi',null],[52,'bobby',null],[53,'Maybel',null],[54,'Tassel',null],[55,'Rio',null],
+  [56,'Julian',null],[57,'Sprig','Sarah'],[58,'Bonbon',null],[59,'Monsieur',null],[60,'DK',null],
+  [61,'Ann',null],[62,'Mizzle',null],[63,'Sorbet',null],[64,'Sienna',null],[65,'Wisteria',null],
+  [66,'Victoria',null],[67,'Figaro',null],[68,'Danky',null],[69,'Inky',null],[70,'Audri',null],
+  [71,'Frizzle',null],[72,'Hallo',null],[73,'Chartie',null],[74,'Gabriella',null],[75,'Whimsy',null],
+  [76,'Periwinkle',null],[77,'Avon','Peony'],[78,'Mochi',null],[79,'Faartz',null],[80,'Samsies',null],
+  [81,'Nimbus',null],[82,'Nick',null],[83,'Bella Avis',null],[84,'Waffle',null],[85,'Dash',null],
+  [86,'Sheena',null],[87,'Stella',null],[88,'Velvet',null],[89,'Berry',null],[90,'Quinn',null],
+  [91,'Perry',null],[92,'Mike',null],[93,'Mario',null],[94,'Cam','Gianna'],[95,'Pippin',null],
+  [96,'Ozzy','Vinnie'],[97,'Thomas',null],[98,'Barbara',null],[99,'Kyra',null],[100,'Lesane',null],
+];
+
+const STORAGE_KEY = 'birdsapp_v3';
+
+function loadState() {
+  try { const s = localStorage.getItem(STORAGE_KEY); if (s) return JSON.parse(s); } catch(e) {}
+  const blank = {}; BIRDS_RAW.forEach(([num]) => { blank[num] = {}; }); return blank;
+}
+function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {} }
+let state = loadState();
+
+function loadNames() { try { const n = localStorage.getItem(STORAGE_KEY+'_names'); return n ? JSON.parse(n) : {}; } catch(e) { return {}; } }
+function saveNames() { try { localStorage.setItem(STORAGE_KEY+'_names', JSON.stringify(customNames)); } catch(e) {} }
+let customNames = loadNames();
+
+function getDisplayName(num, defaultName, former) {
+  const name = customNames[num] !== undefined ? customNames[num] : defaultName;
+  return former ? `${name} (${former})` : name;
+}
+
+let activeFilter = 'all', activeSanctuaryFilter = null, searchVal = '';
+
+function isCollected(num) { return state[num] && Object.values(state[num]).some(v => v); }
+function collectedCount(num) { return state[num] ? Object.values(state[num]).filter(v=>v).length : 0; }
+function totalBirdsCollected() { return BIRDS_RAW.filter(([num]) => isCollected(num)).length; }
+function totalObservations() { return BIRDS_RAW.reduce((sum,[num]) => sum+(state[num]?Object.values(state[num]).filter(v=>v).length:0),0); }
+function countPerSanctuary() {
+  const c={}; SANCTUARIES.forEach(s=>{c[s.code]=0;});
+  BIRDS_RAW.forEach(([num])=>{ if(state[num]) SANCTUARIES.forEach(s=>{ if(state[num][s.code]) c[s.code]++; }); });
+  return c;
+}
+
+function renderSanctuaryBars() {
+  const counts = countPerSanctuary();
+  const container = document.getElementById('sanctuary-bars');
+  container.innerHTML = '';
+  SANCTUARIES.forEach(s => {
+    const div = document.createElement('div');
+    div.className = `s-bar ${s.code}${activeSanctuaryFilter===s.code?' active':''}`;
+    div.innerHTML = `<div class="dot"></div><span class="label">${s.short}</span><span class="count">${counts[s.code]}/100</span>`;
+    div.addEventListener('click', () => { activeSanctuaryFilter = activeSanctuaryFilter===s.code?null:s.code; renderAll(); });
+    container.appendChild(div);
+  });
+}
+
+function renderGrid() {
+  const grid = document.getElementById('bird-grid');
+  grid.innerHTML = '';
+  const filtered = BIRDS_RAW.filter(([num,defaultName,former]) => {
+    const display = getDisplayName(num,defaultName,former);
+    if (searchVal && !display.toLowerCase().includes(searchVal)) return false;
+    if (activeSanctuaryFilter && !(state[num]&&state[num][activeSanctuaryFilter])) return false;
+    if (activeFilter==='full' && collectedCount(num)<5) return false;
+    if (activeFilter==='multi' && collectedCount(num)<2) return false;
+    return true;
+  });
+
+  if (!filtered.length) {
+    const div=document.createElement('div'); div.className='no-results'; div.textContent='no birds found'; grid.appendChild(div); return;
+  }
+
+  filtered.forEach(([num,defaultName,former]) => {
+    const displayName = getDisplayName(num,defaultName,former);
+    const complete = collectedCount(num)===5;
+    const card = document.createElement('div');
+    card.className = `bird-card${complete?' complete':''}`;
+
+    const numEl = document.createElement('div');
+    numEl.className = 'bird-num';
+    numEl.textContent = num;
+
+    const nameWrap = document.createElement('div');
+    nameWrap.className = 'bird-name-wrap';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'bird-name';
+    nameEl.contentEditable = 'true';
+    nameEl.textContent = displayName;
+    nameEl.title = 'click to rename';
+    nameEl.addEventListener('blur', () => {
+      const val = nameEl.textContent.trim();
+      if (val) { customNames[num] = val; saveNames(); }
+      else { nameEl.textContent = displayName; }
+    });
+    nameEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); nameEl.blur(); } e.stopPropagation(); });
+    nameEl.addEventListener('click', e => e.stopPropagation());
+    nameWrap.appendChild(nameEl);
+
+    const pips = document.createElement('div');
+    pips.className = 'bird-sanctuaries';
+    SANCTUARIES.forEach(s => {
+      const pip = document.createElement('div');
+      const collected = state[num]&&state[num][s.code];
+      pip.className = `s-pip ${s.code}${collected?' collected':''}`;
+      pip.textContent = s.short;
+      pip.style.color = collected?'white':'transparent';
+      pip.addEventListener('mouseenter', e => {
+        const tt=document.getElementById('tooltip');
+        tt.textContent=collected?`remove from ${s.name}`:`add to ${s.name}`;
+        tt.style.opacity='1'; tt.style.left=(e.clientX+10)+'px'; tt.style.top=(e.clientY-24)+'px';
+      });
+      pip.addEventListener('mousemove', e => {
+        const tt=document.getElementById('tooltip');
+        tt.style.left=(e.clientX+10)+'px'; tt.style.top=(e.clientY-24)+'px';
+      });
+      pip.addEventListener('mouseleave', () => { document.getElementById('tooltip').style.opacity='0'; });
+      pip.addEventListener('click', () => {
+        if(!state[num]) state[num]={};
+        state[num][s.code]=!state[num][s.code];
+        saveState(); renderAll();
+      });
+      pips.appendChild(pip);
+    });
+
+    card.appendChild(numEl); card.appendChild(nameWrap); card.appendChild(pips);
+    grid.appendChild(card);
+  });
+}
+
+function renderSidebar() {
+  const counts = countPerSanctuary();
+  const pb = document.getElementById('progress-blocks');
+  pb.innerHTML = '';
+  SANCTUARIES.forEach(s => {
+    const c=counts[s.code], pct=(c/100*100).toFixed(0);
+    const div=document.createElement('div'); div.className='progress-block';
+    div.innerHTML=`<div class="p-name">${s.name}</div><div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:var(--${s.code})"></div></div><div class="p-nums"><span>${c} / 100</span>${c===100?'<span class="complete-label">complete ✓</span>':''}</div>`;
+    pb.appendChild(div);
+  });
+  const total=totalBirdsCollected(), obs=totalObservations();
+  const ms=document.getElementById('milestones'); ms.innerHTML='';
+  const m1=document.createElement('div'); m1.className=`milestone${total===100?' achieved':''}`;
+  m1.innerHTML=`<div class="m-icon">${total===100?'🎉':'🐦'}</div><div class="m-label">milestone 1</div><div class="m-val">${total} / 100 birds</div><div class="m-label">${total===100?'complete!':`${100-total} remaining`}</div>`;
+  ms.appendChild(m1);
+  const m2=document.createElement('div'); m2.className=`milestone${obs===500?' achieved':''}`; m2.style.marginTop='0.6rem';
+  m2.innerHTML=`<div class="m-icon">${obs===500?'🏆':'🔭'}</div><div class="m-label">milestone 2</div><div class="m-val">${obs} / 500 obs.</div><div class="m-label">${obs===500?'complete!':`${500-obs} remaining`}</div>`;
+  ms.appendChild(m2);
+  document.getElementById('total-count').textContent=total;
+  document.getElementById('obs-count').textContent=obs;
+}
+
+function renderAll() { renderSanctuaryBars(); renderGrid(); renderSidebar(); }
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); activeFilter=btn.dataset.filter; renderAll();
+  });
+});
+document.getElementById('search').addEventListener('input', e => { searchVal=e.target.value.toLowerCase().trim(); renderAll(); });
+
+renderAll();
+</script>
+</body>
+</html>
